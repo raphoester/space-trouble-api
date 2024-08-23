@@ -17,3 +17,12 @@ func Parse(date string) (Date, error) {
 	}
 	return Date(t), nil
 }
+
+func MustParse(date string) Date {
+	parsed, err := Parse(date)
+	if err != nil {
+		panic(err)
+	}
+
+	return parsed
+}

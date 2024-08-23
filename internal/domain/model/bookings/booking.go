@@ -38,6 +38,18 @@ func (b Booking) ID() id.ID {
 	return b.id
 }
 
+func (b Booking) ConflictsWith(with Booking) bool {
+	if b.launchpadID != with.launchpadID || b.launchDate != with.launchDate {
+		return false
+	}
+
+	if b.destinationID != with.destinationID {
+		return true
+	}
+
+	return false
+}
+
 func (b Booking) ToSnapshot() BookingSnapshot {
 	return BookingSnapshot{
 		ID:            b.id.String(),
