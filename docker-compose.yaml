@@ -1,0 +1,5 @@
+version: v3
+name: "space-trouble-api"
+services:
+  backend:
+    image: space-trouble-api:dev
