@@ -7,6 +7,7 @@ import (
 	"github.com/raphoester/space-trouble-api/internal/domain/commands/book_ticket"
 	"github.com/raphoester/space-trouble-api/internal/domain/model/bookings"
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/inmemory_bookings_storage"
+	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/inmemory_competitor_flights_provider"
 	"github.com/raphoester/space-trouble-api/internal/pkg/date"
 	"github.com/raphoester/space-trouble-api/internal/pkg/id"
 	"github.com/stretchr/testify/assert"
@@ -25,7 +26,8 @@ type testSuite struct {
 func (s *testSuite) TestNominalCase() {
 	s.T().Run("Should be able to book a ticket when no conflict is detected", func(t *testing.T) {
 		storage := inmemory_bookings_storage.New()
-		bookTicket := book_ticket.NewTicketBooker(storage)
+		competitorFlightsProvider := inmemory_competitor_flights_provider.New()
+		bookTicket := book_ticket.NewTicketBooker(storage, competitorFlightsProvider)
 
 		bookingID := (&id.FixedIDGenerator{}).Generate().String()
 
@@ -62,10 +64,12 @@ func (s *testSuite) TestNominalCase() {
 	})
 }
 
-func (s *testSuite) TestConflict() {
-	s.T().Run("Should not be able to book a ticket when the booking triggers a conflict", func(t *testing.T) {
+func (s *testSuite) TestInternalConflict() {
+	s.T().Run("Should not be able to book a ticket when the booking conflicts "+
+		"with another previous booking", func(t *testing.T) {
 		storage := inmemory_bookings_storage.New()
-		bookTicket := book_ticket.NewTicketBooker(storage)
+		competitorFlightsProvider := inmemory_competitor_flights_provider.New()
+		bookTicket := book_ticket.NewTicketBooker(storage, competitorFlightsProvider)
 
 		idFactory := id.NewChaoticFactory(t.Name())
 		launchpadID := idFactory.Generate()
@@ -105,4 +109,40 @@ func (s *testSuite) TestConflict() {
 		firstBooking := storedBookings[0]
 		assert.EqualValues(t, conflictingBooking.ToSnapshot(), firstBooking.ToSnapshot())
 	})
+}
+
+func (s *testSuite) TestConflictWithCompetitor() {
+	s.T().Run("Should not be able to book a ticket when the booking triggers a conflict with a competitor",
+		func(t *testing.T) {
+
+			competitorFlightsProvider := inmemory_competitor_flights_provider.New()
+			bookingsStorage := inmemory_bookings_storage.New()
+
+			conflictingDate := date.MustParse("13/10/2024")
+			err := competitorFlightsProvider.RegisterFlight("example-launchpad-id",
+				conflictingDate)
+			require.NoError(t, err)
+
+			bookTicket := book_ticket.NewTicketBooker(bookingsStorage, competitorFlightsProvider)
+
+			idFactory := id.NewChaoticFactory(t.Name())
+			err = bookTicket.Execute(context.Background(),
+				book_ticket.BookTicketParams{
+					ID:            idFactory.Generate().String(),
+					FirstName:     "John",
+					LastName:      "Doe",
+					Gender:        "Male",
+					Birthday:      "12/05",
+					LaunchpadID:   "example-launchpad-id",
+					DestinationID: "example-destination-id",
+					LaunchDate:    conflictingDate.String(),
+				})
+
+			assert.Error(t, err)
+			assert.ErrorIs(t, err, book_ticket.ErrLaunchpadUnavailable)
+
+			storedBookings, err := bookingsStorage.ListBookings(context.Background())
+			require.NoError(t, err)
+			assert.Empty(t, storedBookings)
+		})
 }

@@ -11,14 +11,19 @@ import (
 	"github.com/raphoester/space-trouble-api/internal/pkg/id"
 )
 
-func NewTicketBooker(bookingsRepository BookingsRepository) *TicketBooker {
+func NewTicketBooker(
+	bookingsRepository BookingsRepository,
+	competitorBookingsProvider CompetitorFlightsProvider,
+) *TicketBooker {
 	return &TicketBooker{
-		bookingsRepository: bookingsRepository,
+		bookingsRepository:         bookingsRepository,
+		competitorBookingsProvider: competitorBookingsProvider,
 	}
 }
 
 type TicketBooker struct {
-	bookingsRepository BookingsRepository
+	bookingsRepository         BookingsRepository
+	competitorBookingsProvider CompetitorFlightsProvider
 }
 
 type BookTicketParams struct {
@@ -35,6 +40,10 @@ type BookTicketParams struct {
 type BookingsRepository interface {
 	SaveBooking(ctx context.Context, flight *bookings.Booking) error
 	ListConflictingFlightBookings(ctx context.Context, booking *bookings.Booking) ([]bookings.Booking, error)
+}
+
+type CompetitorFlightsProvider interface {
+	FlightExistsAtLaunchpadOnDate(ctx context.Context, launchpadID string, date date.Date) (bool, error)
 }
 
 var ErrLaunchpadUnavailable = errors.New("launchpad is already used for another destination on that day")
@@ -66,6 +75,16 @@ func (b *TicketBooker) Execute(
 	}
 
 	if len(conflicts) != 0 {
+		return ErrLaunchpadUnavailable
+	}
+
+	launchpadIsTaken, err := b.competitorBookingsProvider.
+		FlightExistsAtLaunchpadOnDate(ctx, params.LaunchpadID, launchDate)
+	if err != nil {
+		return fmt.Errorf("could not check launchpad availability against provider: %w", err)
+	}
+
+	if launchpadIsTaken {
 		return ErrLaunchpadUnavailable
 	}
 
