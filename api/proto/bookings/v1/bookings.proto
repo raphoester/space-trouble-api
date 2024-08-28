@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package bookings.v1;
+
+service BookingsService {
+  rpc  BookTicket (BookTicketRequest) returns (BookTicketResponse);
+}
+
+message BookTicketRequest {
+  string id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string gender = 4;
+  string birthday = 5;
+  string launchpad_id = 6;
+  string destination_id = 7;
+  string launch_date = 8;
+}
+
+message BookTicketResponse {}
