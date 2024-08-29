@@ -7,14 +7,19 @@ import (
 	"github.com/raphoester/space-trouble-api/internal/domain/commands/book_ticket"
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/primary/controller"
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/inmemory_bookings_storage"
+	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/inmemory_competitor_flights_provider"
+	"github.com/raphoester/space-trouble-api/internal/queries/get_all_bookings/inmemory_bookings_getter"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 func main() {
 	bookingsRepo := inmemory_bookings_storage.New()
-	ticketBooker := book_ticket.NewTicketBooker(bookingsRepo)
-	ctr := controller.New(ticketBooker)
+	competitorFlightsProvider := inmemory_competitor_flights_provider.New()
+	ticketBooker := book_ticket.NewTicketBooker(bookingsRepo, competitorFlightsProvider)
+
+	bookingsGetter := inmemory_bookings_getter.New(bookingsRepo)
+	ctr := controller.New(ticketBooker, bookingsGetter)
 
 	server := grpc.NewServer()
 	bookingsv1.RegisterBookingsServiceServer(server, ctr)

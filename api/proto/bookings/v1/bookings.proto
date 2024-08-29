@@ -3,7 +3,8 @@ syntax = "proto3";
 package bookings.v1;
 
 service BookingsService {
-  rpc  BookTicket (BookTicketRequest) returns (BookTicketResponse);
+  rpc BookTicket (BookTicketRequest) returns (BookTicketResponse);
+  rpc GetAllBookings(GetAllBookingsRequest) returns (GetAllBookingsResponse);
 }
 
 message BookTicketRequest {
@@ -18,3 +19,18 @@ message BookTicketRequest {
 }
 
 message BookTicketResponse {}
+
+message GetAllBookingsRequest {}
+
+message GetAllBookingsResponse {
+  repeated Booking bookings = 1;
+}
+
+message Booking {
+  string id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string launchpad_id = 6;
+  string destination_id = 7;
+  string launch_date = 8;
+}

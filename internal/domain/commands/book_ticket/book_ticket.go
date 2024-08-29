@@ -13,17 +13,21 @@ import (
 
 func NewTicketBooker(
 	bookingsRepository BookingsRepository,
-	competitorBookingsProvider CompetitorFlightsProvider,
+	competitorFlightsProvider CompetitorFlightsProvider,
 ) *TicketBooker {
 	return &TicketBooker{
 		bookingsRepository:         bookingsRepository,
-		competitorBookingsProvider: competitorBookingsProvider,
+		competitorBookingsProvider: competitorFlightsProvider,
 	}
 }
 
 type TicketBooker struct {
 	bookingsRepository         BookingsRepository
 	competitorBookingsProvider CompetitorFlightsProvider
+}
+
+type ITicketBooker interface {
+	Execute(ctx context.Context, params BookTicketParams) error
 }
 
 type BookTicketParams struct {

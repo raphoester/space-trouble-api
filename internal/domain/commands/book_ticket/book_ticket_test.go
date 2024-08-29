@@ -45,8 +45,7 @@ func (s *testSuite) TestNominalCase() {
 		err := bookTicket.Execute(context.Background(), params)
 
 		assert.NoError(t, err)
-		savedBookings, err := storage.ListBookings(context.Background())
-		assert.NoError(t, err)
+		savedBookings := storage.ListBookings()
 		require.Len(t, savedBookings, 1)
 
 		expectedSnapshot := bookings.BookingSnapshot{
@@ -101,8 +100,7 @@ func (s *testSuite) TestInternalConflict() {
 		assert.Error(t, err)
 		assert.ErrorIs(t, err, book_ticket.ErrLaunchpadUnavailable)
 
-		storedBookings, err := storage.ListBookings(context.Background())
-		require.NoError(t, err)
+		storedBookings := storage.ListBookings()
 		require.GreaterOrEqual(t, len(storedBookings), 1)
 		assert.Len(t, storedBookings, 1)
 
@@ -141,8 +139,7 @@ func (s *testSuite) TestConflictWithCompetitor() {
 			assert.Error(t, err)
 			assert.ErrorIs(t, err, book_ticket.ErrLaunchpadUnavailable)
 
-			storedBookings, err := bookingsStorage.ListBookings(context.Background())
-			require.NoError(t, err)
+			storedBookings := bookingsStorage.ListBookings()
 			assert.Empty(t, storedBookings)
 		})
 }

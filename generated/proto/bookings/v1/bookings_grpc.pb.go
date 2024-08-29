@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	BookingsService_BookTicket_FullMethodName = "/bookings.v1.BookingsService/BookTicket"
+	BookingsService_BookTicket_FullMethodName     = "/bookings.v1.BookingsService/BookTicket"
+	BookingsService_GetAllBookings_FullMethodName = "/bookings.v1.BookingsService/GetAllBookings"
 )
 
 // BookingsServiceClient is the client API for BookingsService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BookingsServiceClient interface {
 	BookTicket(ctx context.Context, in *BookTicketRequest, opts ...grpc.CallOption) (*BookTicketResponse, error)
+	GetAllBookings(ctx context.Context, in *GetAllBookingsRequest, opts ...grpc.CallOption) (*GetAllBookingsResponse, error)
 }
 
 type bookingsServiceClient struct {
@@ -46,11 +48,21 @@ func (c *bookingsServiceClient) BookTicket(ctx context.Context, in *BookTicketRe
 	return out, nil
 }
 
+func (c *bookingsServiceClient) GetAllBookings(ctx context.Context, in *GetAllBookingsRequest, opts ...grpc.CallOption) (*GetAllBookingsResponse, error) {
+	out := new(GetAllBookingsResponse)
+	err := c.cc.Invoke(ctx, BookingsService_GetAllBookings_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BookingsServiceServer is the server API for BookingsService service.
 // All implementations must embed UnimplementedBookingsServiceServer
 // for forward compatibility
 type BookingsServiceServer interface {
 	BookTicket(context.Context, *BookTicketRequest) (*BookTicketResponse, error)
+	GetAllBookings(context.Context, *GetAllBookingsRequest) (*GetAllBookingsResponse, error)
 	mustEmbedUnimplementedBookingsServiceServer()
 }
 
@@ -60,6 +72,9 @@ type UnimplementedBookingsServiceServer struct {
 
 func (UnimplementedBookingsServiceServer) BookTicket(context.Context, *BookTicketRequest) (*BookTicketResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BookTicket not implemented")
+}
+func (UnimplementedBookingsServiceServer) GetAllBookings(context.Context, *GetAllBookingsRequest) (*GetAllBookingsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllBookings not implemented")
 }
 func (UnimplementedBookingsServiceServer) mustEmbedUnimplementedBookingsServiceServer() {}
 
@@ -92,6 +107,24 @@ func _BookingsService_BookTicket_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BookingsService_GetAllBookings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAllBookingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookingsServiceServer).GetAllBookings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookingsService_GetAllBookings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookingsServiceServer).GetAllBookings(ctx, req.(*GetAllBookingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BookingsService_ServiceDesc is the grpc.ServiceDesc for BookingsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -102,6 +135,10 @@ var BookingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BookTicket",
 			Handler:    _BookingsService_BookTicket_Handler,
+		},
+		{
+			MethodName: "GetAllBookings",
+			Handler:    _BookingsService_GetAllBookings_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
