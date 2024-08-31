@@ -14,16 +14,19 @@ import (
 func NewTicketBooker(
 	bookingsRepository BookingsRepository,
 	competitorFlightsProvider CompetitorFlightsProvider,
+	launchpadRegistry LaunchpadRegistry,
 ) *TicketBooker {
 	return &TicketBooker{
 		bookingsRepository:         bookingsRepository,
 		competitorBookingsProvider: competitorFlightsProvider,
+		launchpadRegistry:          launchpadRegistry,
 	}
 }
 
 type TicketBooker struct {
 	bookingsRepository         BookingsRepository
 	competitorBookingsProvider CompetitorFlightsProvider
+	launchpadRegistry          LaunchpadRegistry
 }
 
 type ITicketBooker interface {
@@ -50,12 +53,23 @@ type CompetitorFlightsProvider interface {
 	FlightExistsAtLaunchpadOnDate(ctx context.Context, launchpadID string, date date.Date) (bool, error)
 }
 
-var ErrLaunchpadUnavailable = errors.New("launchpad is already used for another destination on that day")
+type LaunchpadRegistry interface {
+	LaunchpadExists(launchpadID string) bool
+}
+
+var (
+	ErrLaunchpadDoesNotExist = errors.New("launchpad does not exist")
+	ErrLaunchpadUnavailable  = errors.New("launchpad is already used for another destination on that day")
+)
 
 func (b *TicketBooker) Execute(
 	ctx context.Context,
 	params BookTicketParams,
 ) error {
+	if !b.launchpadRegistry.LaunchpadExists(params.LaunchpadID) {
+		return ErrLaunchpadDoesNotExist
+	}
+
 	bd, err := birthday.Parse(params.Birthday)
 	if err != nil {
 		return fmt.Errorf("invalid birthday: %w", err)

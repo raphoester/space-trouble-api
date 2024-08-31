@@ -6,6 +6,7 @@ import (
 
 	"github.com/raphoester/space-trouble-api/internal/domain/commands/book_ticket"
 	"github.com/raphoester/space-trouble-api/internal/domain/model/bookings"
+	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/hardcoded_launchpad_registry"
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/inmemory_bookings_storage"
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/inmemory_competitor_flights_provider"
 	"github.com/raphoester/space-trouble-api/internal/pkg/date"
@@ -27,7 +28,8 @@ func (s *testSuite) TestNominalCase() {
 	s.T().Run("Should be able to book a ticket when no conflict is detected", func(t *testing.T) {
 		storage := inmemory_bookings_storage.New()
 		competitorFlightsProvider := inmemory_competitor_flights_provider.New()
-		bookTicket := book_ticket.NewTicketBooker(storage, competitorFlightsProvider)
+		launchpadRegistry := hardcoded_launchpad_registry.New()
+		bookTicket := book_ticket.NewTicketBooker(storage, competitorFlightsProvider, launchpadRegistry)
 
 		bookingID := (&id.FixedIDGenerator{}).Generate().String()
 
@@ -37,7 +39,7 @@ func (s *testSuite) TestNominalCase() {
 			LastName:      "Doe",
 			Gender:        "Male",
 			Birthday:      "13/05",
-			LaunchpadID:   "example-launchpad-id",
+			LaunchpadID:   hardcoded_launchpad_registry.Florida,
 			DestinationID: "example-destination-id",
 			LaunchDate:    "13/10/2024",
 		}
@@ -55,7 +57,7 @@ func (s *testSuite) TestNominalCase() {
 			Gender:        "Male",
 			Birthday:      "13/05",
 			DestinationID: "example-destination-id",
-			LaunchpadID:   "example-launchpad-id",
+			LaunchpadID:   hardcoded_launchpad_registry.Florida,
 			LaunchDate:    "13/10/2024",
 		}
 
@@ -68,10 +70,11 @@ func (s *testSuite) TestInternalConflict() {
 		"with another previous booking", func(t *testing.T) {
 		storage := inmemory_bookings_storage.New()
 		competitorFlightsProvider := inmemory_competitor_flights_provider.New()
-		bookTicket := book_ticket.NewTicketBooker(storage, competitorFlightsProvider)
+		launchpadRegistry := hardcoded_launchpad_registry.New()
+		bookTicket := book_ticket.NewTicketBooker(storage, competitorFlightsProvider, launchpadRegistry)
 
 		idFactory := id.NewChaoticFactory(t.Name())
-		launchpadID := idFactory.Generate()
+		launchpadID := hardcoded_launchpad_registry.Texas
 		destinationID := idFactory.Generate()
 		launchDate := date.MustParse("25/11/2024")
 
@@ -81,7 +84,7 @@ func (s *testSuite) TestInternalConflict() {
 				LastName:  "Doe",
 				Gender:    "Male",
 				Birthday:  "07/03",
-			}, destinationID.String(), launchpadID.String(), launchDate)
+			}, destinationID.String(), launchpadID, launchDate)
 		err := storage.SaveBooking(context.Background(), conflictingBooking)
 		require.NoError(t, err)
 
@@ -92,7 +95,7 @@ func (s *testSuite) TestInternalConflict() {
 				LastName:      "Smith",
 				Gender:        "Female",
 				Birthday:      "29/09",
-				LaunchpadID:   launchpadID.String(),
+				LaunchpadID:   launchpadID,
 				DestinationID: idFactory.Generate().String(), // other destination
 				LaunchDate:    launchDate.String(),
 			})
@@ -115,13 +118,14 @@ func (s *testSuite) TestConflictWithCompetitor() {
 
 			competitorFlightsProvider := inmemory_competitor_flights_provider.New()
 			bookingsStorage := inmemory_bookings_storage.New()
+			launchpadRegistry := hardcoded_launchpad_registry.New()
 
 			conflictingDate := date.MustParse("13/10/2024")
-			err := competitorFlightsProvider.RegisterFlight("example-launchpad-id",
+			err := competitorFlightsProvider.RegisterFlight(hardcoded_launchpad_registry.California,
 				conflictingDate)
 			require.NoError(t, err)
 
-			bookTicket := book_ticket.NewTicketBooker(bookingsStorage, competitorFlightsProvider)
+			bookTicket := book_ticket.NewTicketBooker(bookingsStorage, competitorFlightsProvider, launchpadRegistry)
 
 			idFactory := id.NewChaoticFactory(t.Name())
 			err = bookTicket.Execute(context.Background(),
@@ -131,7 +135,7 @@ func (s *testSuite) TestConflictWithCompetitor() {
 					LastName:      "Doe",
 					Gender:        "Male",
 					Birthday:      "12/05",
-					LaunchpadID:   "example-launchpad-id",
+					LaunchpadID:   hardcoded_launchpad_registry.California,
 					DestinationID: "example-destination-id",
 					LaunchDate:    conflictingDate.String(),
 				})
@@ -141,5 +145,36 @@ func (s *testSuite) TestConflictWithCompetitor() {
 
 			storedBookings := bookingsStorage.ListBookings()
 			assert.Empty(t, storedBookings)
+		})
+}
+
+func (s *testSuite) TestLaunchpadNotExisting() {
+	s.T().Run("Should not be able to book a ticket when the launchpad does not exist",
+		func(t *testing.T) {
+			competitorFlightsProvider := inmemory_competitor_flights_provider.New()
+			bookingsStorage := inmemory_bookings_storage.New()
+			launchpadRegistry := hardcoded_launchpad_registry.New()
+			bookTicket := book_ticket.NewTicketBooker(bookingsStorage, competitorFlightsProvider, launchpadRegistry)
+
+			idFactory := id.NewChaoticFactory(t.Name())
+
+			err := bookTicket.Execute(context.Background(),
+				book_ticket.BookTicketParams{
+					ID:            idFactory.Generate().String(),
+					FirstName:     "John",
+					LastName:      "Doe",
+					Gender:        "Male",
+					Birthday:      "12/05",
+					LaunchpadID:   "does-not-exist",
+					DestinationID: "example-destination-id",
+					LaunchDate:    date.MustParse("25/11/2024").String(),
+				})
+
+			assert.Error(t, err)
+			assert.ErrorIs(t, err, book_ticket.ErrLaunchpadDoesNotExist)
+
+			storedBookings := bookingsStorage.ListBookings()
+			assert.Empty(t, storedBookings)
+
 		})
 }
