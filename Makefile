@@ -10,3 +10,9 @@ proto:
 
 dbuild:
 	docker build -t space-trouble-api:dev .
+
+
+# TODO: dockerize db migration as well for version consistency
+migration:
+	@cd ./sql && \
+		migrate create -ext sql -dir ./ -seq $(name)
