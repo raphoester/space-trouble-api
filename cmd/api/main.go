@@ -9,7 +9,7 @@ import (
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/hardcoded_destination_registry"
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/hardcoded_launchpad_registry"
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/inmemory_bookings_storage"
-	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/inmemory_competitor_flights_provider"
+	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/spacex_competitor_flights_provider"
 	"github.com/raphoester/space-trouble-api/internal/queries/get_all_bookings/inmemory_bookings_getter"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -17,7 +17,7 @@ import (
 
 func main() {
 	bookingsRepo := inmemory_bookings_storage.New()
-	competitorFlightsProvider := inmemory_competitor_flights_provider.New()
+	competitorFlightsProvider := spacex_competitor_flights_provider.New()
 	launchpadRegistry := hardcoded_launchpad_registry.New()
 	destinationRegistry := hardcoded_destination_registry.New()
 	ticketBooker := book_ticket.NewTicketBooker(bookingsRepo, competitorFlightsProvider,
