@@ -15,11 +15,13 @@ func NewTicketBooker(
 	bookingsRepository BookingsRepository,
 	competitorFlightsProvider CompetitorFlightsProvider,
 	launchpadRegistry LaunchpadRegistry,
+	destinationRegistry DestinationRegistry,
 ) *TicketBooker {
 	return &TicketBooker{
 		bookingsRepository:         bookingsRepository,
 		competitorBookingsProvider: competitorFlightsProvider,
 		launchpadRegistry:          launchpadRegistry,
+		destinationRegistry:        destinationRegistry,
 	}
 }
 
@@ -27,6 +29,7 @@ type TicketBooker struct {
 	bookingsRepository         BookingsRepository
 	competitorBookingsProvider CompetitorFlightsProvider
 	launchpadRegistry          LaunchpadRegistry
+	destinationRegistry        DestinationRegistry
 }
 
 type ITicketBooker interface {
@@ -57,9 +60,14 @@ type LaunchpadRegistry interface {
 	LaunchpadExists(launchpadID string) bool
 }
 
+type DestinationRegistry interface {
+	DestinationExists(destinationID string) bool
+}
+
 var (
-	ErrLaunchpadDoesNotExist = errors.New("launchpad does not exist")
-	ErrLaunchpadUnavailable  = errors.New("launchpad is already used for another destination on that day")
+	ErrLaunchpadDoesNotExist   = errors.New("launchpad does not exist")
+	ErrDestinationDoesNotExist = errors.New("destination does not exist")
+	ErrLaunchpadUnavailable    = errors.New("launchpad is already used for another destination on that day")
 )
 
 func (b *TicketBooker) Execute(
@@ -68,6 +76,10 @@ func (b *TicketBooker) Execute(
 ) error {
 	if !b.launchpadRegistry.LaunchpadExists(params.LaunchpadID) {
 		return ErrLaunchpadDoesNotExist
+	}
+
+	if !b.destinationRegistry.DestinationExists(params.DestinationID) {
+		return ErrDestinationDoesNotExist
 	}
 
 	bd, err := birthday.Parse(params.Birthday)
