@@ -2,6 +2,7 @@ package main
 
 import (
 	"net"
+	"os"
 
 	bookingsv1 "github.com/raphoester/space-trouble-api/generated/proto/bookings/v1"
 	"github.com/raphoester/space-trouble-api/internal/domain/commands/book_ticket"
@@ -9,21 +10,30 @@ import (
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/hardcoded_destination_registry"
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/hardcoded_launchpad_registry"
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/inmemory_bookings_storage"
+	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/psql_bookings_storage"
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/spacex_competitor_flights_provider"
+	"github.com/raphoester/space-trouble-api/internal/pkg/postgres"
 	"github.com/raphoester/space-trouble-api/internal/queries/get_all_bookings/inmemory_bookings_getter"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
+// TODO: manage app DI sequence with a separate package
+
 func main() {
-	bookingsRepo := inmemory_bookings_storage.New()
+	// TODO: replace with viper (for the demo this is fine)
+	pg, err := postgres.New(os.Getenv("POSTGRES_DSN"))
+	if err != nil {
+		panic(err)
+	}
+	bookingsRepo := psql_bookings_storage.New(pg)
 	competitorFlightsProvider := spacex_competitor_flights_provider.New()
 	launchpadRegistry := hardcoded_launchpad_registry.New()
 	destinationRegistry := hardcoded_destination_registry.New()
 	ticketBooker := book_ticket.NewTicketBooker(bookingsRepo, competitorFlightsProvider,
 		launchpadRegistry, destinationRegistry)
 
-	bookingsGetter := inmemory_bookings_getter.New(bookingsRepo)
+	bookingsGetter := inmemory_bookings_getter.New(inmemory_bookings_storage.New()) // todo: put another implem here
 	ctr := controller.New(ticketBooker, bookingsGetter)
 
 	server := grpc.NewServer()

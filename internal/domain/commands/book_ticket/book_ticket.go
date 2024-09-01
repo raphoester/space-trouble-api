@@ -49,7 +49,7 @@ type BookTicketParams struct {
 
 type BookingsRepository interface {
 	SaveBooking(ctx context.Context, flight *bookings.Booking) error
-	ListConflictingFlightBookings(ctx context.Context, booking *bookings.Booking) ([]bookings.Booking, error)
+	ListConflictingFlightBookings(ctx context.Context, booking *bookings.Booking) ([]*bookings.Booking, error)
 }
 
 type CompetitorFlightsProvider interface {

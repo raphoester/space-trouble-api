@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type Postgres struct {
@@ -19,7 +20,9 @@ func New(dsn string) (*Postgres, error) {
 		return nil, fmt.Errorf("failed opening native connection: %w", err)
 	}
 
-	aGorm, err := gorm.Open(postgres.Open(dsn))
+	aGorm, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed opening gorm connection: %w", err)
 	}

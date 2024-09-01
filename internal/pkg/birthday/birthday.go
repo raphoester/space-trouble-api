@@ -4,6 +4,14 @@ import "time"
 
 const format = `02/01`
 
+func MustParse(date string) Date {
+	d, err := Parse(date)
+	if err != nil {
+		panic(err)
+	}
+	return d
+}
+
 func Parse(date string) (Date, error) {
 	t, err := time.Parse(format, date)
 	if err != nil {

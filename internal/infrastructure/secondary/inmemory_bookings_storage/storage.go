@@ -22,11 +22,11 @@ func (s *Storage) SaveBooking(_ context.Context, booking *bookings.Booking) erro
 	return nil
 }
 
-func (s *Storage) ListConflictingFlightBookings(_ context.Context, booking *bookings.Booking) ([]bookings.Booking, error) {
-	ret := make([]bookings.Booking, 0)
+func (s *Storage) ListConflictingFlightBookings(ctx context.Context, booking *bookings.Booking) ([]*bookings.Booking, error) {
+	ret := make([]*bookings.Booking, 0)
 	for _, v := range s.bookings {
 		if booking.ConflictsWith(v) {
-			ret = append(ret, v)
+			ret = append(ret, &v)
 		}
 	}
 	return ret, nil

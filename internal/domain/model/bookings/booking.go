@@ -1,6 +1,9 @@
 package bookings
 
 import (
+	"fmt"
+
+	"github.com/raphoester/space-trouble-api/internal/pkg/birthday"
 	"github.com/raphoester/space-trouble-api/internal/pkg/date"
 	"github.com/raphoester/space-trouble-api/internal/pkg/id"
 )
@@ -13,6 +16,33 @@ func New(id id.ID, clientData ClientData, destinationID string, launchpadID stri
 		launchpadID:   launchpadID,
 		launchDate:    launchDate,
 	}
+}
+
+func Restore(snapshot *BookingSnapshot) (*Booking, error) {
+	anID := id.Parse(snapshot.ID)
+
+	launchDate, err := date.Parse(snapshot.LaunchDate)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse launch date: %w", err)
+	}
+
+	bd, err := birthday.Parse(snapshot.Birthday)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse birthday: %w", err)
+	}
+
+	return &Booking{
+		id: anID,
+		clientData: ClientData{
+			FirstName: snapshot.FirstName,
+			LastName:  snapshot.LastName,
+			Gender:    snapshot.Gender,
+			Birthday:  bd,
+		},
+		destinationID: snapshot.DestinationID,
+		launchpadID:   snapshot.LaunchpadID,
+		launchDate:    launchDate,
+	}, nil
 }
 
 type Booking struct {

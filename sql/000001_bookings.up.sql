@@ -1,10 +1,10 @@
 CREATE TABLE bookings (
-    ID            text not null primary key,
-    FirstName     text not null,
-    LastName      text not null,
-    Gender        text not null,
-    Birthday      text not null,
-    DestinationID text not null,
-    LaunchpadID   text not null,
-    LaunchDate    text not null
+    id            text not null primary key,
+    first_name     text not null,
+    last_name      text not null,
+    gender        text not null,
+    birthday      text not null,
+    destination_id text not null,
+    launchpad_id   text not null,
+    launch_date    text not null
 );
