@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"os"
 
@@ -9,11 +10,10 @@ import (
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/primary/controller"
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/hardcoded_destination_registry"
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/hardcoded_launchpad_registry"
-	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/inmemory_bookings_storage"
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/psql_bookings_storage"
 	"github.com/raphoester/space-trouble-api/internal/infrastructure/secondary/spacex_competitor_flights_provider"
 	"github.com/raphoester/space-trouble-api/internal/pkg/postgres"
-	"github.com/raphoester/space-trouble-api/internal/queries/get_all_bookings/inmemory_bookings_getter"
+	"github.com/raphoester/space-trouble-api/internal/queries/get_all_bookings/psql_bookings_getter"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -33,7 +33,7 @@ func main() {
 	ticketBooker := book_ticket.NewTicketBooker(bookingsRepo, competitorFlightsProvider,
 		launchpadRegistry, destinationRegistry)
 
-	bookingsGetter := inmemory_bookings_getter.New(inmemory_bookings_storage.New()) // todo: put another implem here
+	bookingsGetter := psql_bookings_getter.New(pg)
 	ctr := controller.New(ticketBooker, bookingsGetter)
 
 	server := grpc.NewServer()
@@ -45,6 +45,8 @@ func main() {
 		panic(err)
 	}
 
+	// TODO: add proper logging
+	fmt.Printf("Listening on %s\n", listener.Addr().String())
 	err = server.Serve(listener)
 	if err != nil {
 		panic(err)
