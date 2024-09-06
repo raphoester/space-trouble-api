@@ -5,16 +5,16 @@ import (
 )
 
 type ChaoticGenerator struct {
-	calls int
-	seed  string
+	chaos *chaos.Chaos
 }
 
 func NewChaoticFactory(seed string) *ChaoticGenerator {
-	return &ChaoticGenerator{seed: seed}
+	return &ChaoticGenerator{
+		chaos: chaos.New(seed),
+	}
 }
 
 func (g *ChaoticGenerator) Generate() ID {
-	g.calls++
-	id := chaos.UUID(g.seed, g.calls)
+	id := g.chaos.UUID()
 	return ID(id.String())
 }

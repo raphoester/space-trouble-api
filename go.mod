@@ -6,7 +6,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/google/uuid v1.6.0
 	github.com/ory/dockertest v3.3.5+incompatible
-	github.com/raphoester/chaos v0.0.0-20240904165042-b0b0ea44e234
+	github.com/raphoester/chaos v0.1.0
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
