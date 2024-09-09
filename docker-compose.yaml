@@ -3,9 +3,6 @@ name: "space-trouble-api"
 services:
   backend:
     image: space-trouble-api:dev
-    environment:
-      - POSTGRES_DSN=postgres://space:space@postgres:5432/space?sslmode=disable
-      - MIGRATIONS_PATH=/home/app/sql
     ports:
       - "8080:8080"
     depends_on:
@@ -13,6 +10,7 @@ services:
         condition: service_healthy
     volumes:
       - ./sql:/home/app/sql
+      - ./configs:/home/app/configs
 
   postgres:
     container_name: postgres
