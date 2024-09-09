@@ -22,10 +22,19 @@ import (
 
 func main() {
 	// TODO: replace with viper (for the demo this is fine)
-	pg, err := postgres.New(os.Getenv("POSTGRES_DSN"))
+	pgDSN := os.Getenv("POSTGRES_DSN")
+	migrationsPath := os.Getenv("MIGRATIONS_PATH")
+
+	pg, err := postgres.New(pgDSN)
 	if err != nil {
 		panic(err)
 	}
+
+	// TODO: add condition to run migrations only in dev environment
+	if err := pg.Migrate(migrationsPath); err != nil {
+		panic(err)
+	}
+
 	bookingsRepo := psql_bookings_storage.New(pg)
 	competitorFlightsProvider := spacex_competitor_flights_provider.New()
 	launchpadRegistry := hardcoded_launchpad_registry.New()

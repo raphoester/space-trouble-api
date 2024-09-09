@@ -1,38 +1,26 @@
-# Coding Challenge
-Imagine it’s 2049 and you are working for a company called SpaceTrouble that sends people to different places in our 
-solar system. You are not the only one working in this industry. Your biggest competitor is a less-known company called 
-SpaceX. Unfortunately, you both share the same launchpads and you cannot launch your rockets from the same place on the 
-same day. There is a list of available launchpads and your spaceships go to places like Mars, Moon, Pluto, Asteroid 
-Belt, Europa, Titan, and Ganymede. Every day you change the destination for all the launchpads. Every day of the week 
-from the same launchpad has to be a “flight” to a different place.
+# Space trouble API 
 
-Information about available launchpads and upcoming SpaceX launches you can find by SpaceX 
-API: https://github.com/r-spacex/SpaceX-API
+This is a simple backend that I have created to solve a technical test for a job application. 
+Its goal is to allow users to book tickets for space trips.
 
-Your task is to create an API that will let your consumers book tickets online.
+The original assignment can be found [here](assignment.md).
 
-In order to do that you have to create 2 endpoints:
+This sample application can be used as a boilerplate for a more complex system.
 
-1. Endpoint to book a ticket where a client sends data like:
-- First Name
-- Last Name
-- Gender
-- Birthday
-- Launchpad ID
-- Destination ID
-- Launch Date
+## Tech stack 
 
-You have to verify if the requested trip is possible on the day from the provided launchpad ID and does not overlap with 
-SpaceX launches, if that’s the case then your flight is cancelled.
+- Presentation layer: gRPC with buf for code generation 
+- CQRS pattern and tactical DDD
+- Persistence layer: PostgreSQL + tests with ory/dockertest
+- Runs on Docker Compose
 
-2. Endpoint to get all created Bookings.
+## How to run
 
-Extra points:
-- When you use docker/docker-compose to run the project.
-- When you write unit/functional tests.
-- When you create an endpoint to delete a booking.
+Make sure you have both Docker and Docker Compose installed.
 
-Technical requirements:
-- Please, use Golang and Postgres.
-- Please, use GitHub or Bitbucket.
-- Commit your changes often. Do not push the whole project in one commit.
+Clone the repository and run the following commands:
+
+```console
+make dbuild
+docker-compose up
+```

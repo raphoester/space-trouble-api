@@ -4,6 +4,7 @@ const (
 	Texas      = "TEXAS"
 	Florida    = "FLORIDA"
 	California = "CALIFORNIA"
+	Other      = "5e9e4501f509094ba4566f84" // hack to work with spaceX API
 )
 
 func New() *Registry {
@@ -12,6 +13,7 @@ func New() *Registry {
 			Texas:      {},
 			Florida:    {},
 			California: {},
+			Other:      {},
 		},
 	}
 }

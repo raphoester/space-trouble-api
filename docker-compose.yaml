@@ -3,3 +3,26 @@ name: "space-trouble-api"
 services:
   backend:
     image: space-trouble-api:dev
+    environment:
+      - POSTGRES_DSN=postgres://space:space@postgres:5432/space?sslmode=disable
+      - MIGRATIONS_PATH=/home/app/sql
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./sql:/home/app/sql
+
+  postgres:
+    container_name: postgres
+    image: postgres:16.4-alpine3.20
+    environment:
+      - POSTGRES_USER=space
+      - POSTGRES_PASSWORD=space
+      - POSTGRES_DB=space
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U space" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
