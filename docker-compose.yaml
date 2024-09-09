@@ -11,6 +11,8 @@ services:
     volumes:
       - ./sql:/home/app/sql
       - ./configs:/home/app/configs
+    command:
+      - -config /home/app/configs/sample.yaml
 
   postgres:
     container_name: postgres
